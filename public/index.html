@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gym Desk</title>
+<meta name="theme-color" content="#17243B">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="app">
+  <header class="top" id="top"></header>
+  <main id="screen"><p class="loading">Loading…</p></main>
+</div>
+<nav class="tabs" aria-label="Main"><div class="in" id="tabs"></div></nav>
+<div id="sheetWrap" hidden>
+  <div class="scrim" data-action="close"></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" tabindex="-1"></div>
+</div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<script src="/app.js" defer></script>
+</body>
+</html>
