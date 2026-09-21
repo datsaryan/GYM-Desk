@@ -550,5 +550,10 @@ document.addEventListener('visibilitychange', function () {
   api('GET', '/bootstrap').then(function (d) { applyBootstrap(d); if ($('#sheetWrap').hidden) render(); }).catch(function () { /* stay quiet */ });
 });
 
+// Lets the phone install the site as an app and open it fast.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () { /* not fatal */ }); });
+}
+
 boot();
 })();

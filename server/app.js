@@ -351,6 +351,11 @@ function createApp({ pool, jwtSecret, setupKey, authLimit = 30 }) {
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
 
   /* ---------- static frontend ---------- */
+  // Android app verification file. express.static ignores dot-folders, so it gets its own route.
+  // Replace public/assetlinks.json with the file PWABuilder generates for your Android app.
+  app.get('/.well-known/assetlinks.json', (req, res) => {
+    res.type('application/json').sendFile(path.join(__dirname, '..', 'public', 'assetlinks.json'));
+  });
   app.use(express.static(path.join(__dirname, '..', 'public')));
 
   app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars

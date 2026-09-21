@@ -95,6 +95,12 @@ All routes except the first three need `Authorization: Bearer <token>`.
 - The login token is kept in the browser's localStorage. Use HTTPS (hosts do this by default).
 - Login and setup are rate limited. Passwords are hashed with bcrypt.
 
+## Installing it as an app
+
+**Phone home screen (free, works now):** open the site in Chrome (Android) and choose Install app, or in Safari (iPhone) Share, then Add to Home Screen. The service worker in `public/sw.js` keeps the app shell available, but member data is never cached.
+
+**Android app file (APK) or Play Store:** use https://www.pwabuilder.com with your live URL to generate an Android package (a Trusted Web Activity). PWABuilder also produces an `assetlinks.json` with your signing key's fingerprint. Paste its contents into `public/assetlinks.json`, deploy, and the app opens without a browser address bar. Keep the signing key file PWABuilder gives you somewhere safe: you need the same key for every future update.
+
 ## Ideas for later
 
 Automatic WhatsApp reminders (Business API), QR or face-recognition check-in, staff accounts, trainer and personal-training tracking, a member-facing page for workout plans, and CSV import of the old register.
