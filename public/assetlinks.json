@@ -1,1 +1,8 @@
-[]
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.datsaryan.gymdesk",
+        "sha256_cert_fingerprints": ["A8:25:7A:60:D6:53:A5:25:AA:A8:F1:4B:E3:EC:7A:A8:59:31:96:7F:DF:A3:63:60:91:CB:59:0E:51:5E:BD:29"]
+      }
+    }]
