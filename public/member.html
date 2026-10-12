@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17243B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="My Gym">
+<meta name="referrer" content="no-referrer">
+<title>My Gym</title>
+<style>
+  :root{
+    --ink:#17243B; --paper:#F3F5F8; --card:#fff; --line:#D9DFE7;
+    --amber:#F5A524; --mint:#1F9D74; --red:#C8453F; --muted:#5C6B82;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:var(--font); color:var(--ink); background:var(--paper);
+    padding-bottom:env(safe-area-inset-bottom,0px); line-height:1.4;
+    -webkit-text-size-adjust:100%;
+  }
+  header{
+    background:var(--ink); color:#fff;
+    padding:calc(env(safe-area-inset-top,0px) + 20px) 20px 70px;
+  }
+  header p{margin:0 0 4px; color:#B8C4D8; font-size:15px}
+  header h1{margin:0; font-size:28px; letter-spacing:-.01em}
+  main{max-width:520px; margin:-52px auto 0; padding:0 16px 40px}
+
+  .sub{background:var(--card); border-radius:18px; padding:20px; border:1px solid var(--line)}
+  .sub .plan{display:flex; justify-content:space-between; align-items:center; gap:10px}
+  .sub .plan strong{font-size:18px}
+  .pill{font-size:13px; font-weight:600; padding:4px 10px; border-radius:99px; color:#fff; background:var(--mint)}
+  .pill.warn{background:var(--amber); color:var(--ink)}
+  .pill.bad{background:var(--red)}
+  .days{display:flex; align-items:baseline; gap:8px; margin:18px 0 10px}
+  .days b{font-size:56px; line-height:1; letter-spacing:-.03em}
+  .days span{color:var(--muted); font-size:16px}
+  .bar{height:10px; border-radius:99px; background:#E6EBF1; overflow:hidden}
+  .bar i{display:block; height:100%; background:var(--mint); width:0; transition:width .6s ease}
+  .bar.warn i{background:var(--amber)} .bar.bad i{background:var(--red)}
+  .dates{display:flex; justify-content:space-between; margin-top:10px; color:var(--muted); font-size:14px}
+  .due{margin-top:14px; padding:12px 14px; border-radius:12px; background:#FFF4DD; font-size:15px}
+
+  h2{font-size:20px; margin:30px 4px 12px}
+
+  .add{background:var(--ink); color:#fff; border-radius:18px; padding:18px}
+  .add p{margin:0 0 14px; color:#B8C4D8; font-size:15px}
+  .btn{
+    appearance:none; border:0; width:100%; font:inherit; font-weight:700; font-size:17px;
+    padding:15px; border-radius:14px; background:var(--amber); color:var(--ink); cursor:pointer;
+  }
+  .btn.ghost{background:transparent; color:#fff; border:1px solid #3A4B68; margin-top:10px; font-weight:600; font-size:15px}
+  .btn:disabled{opacity:.6}
+  .btn:focus-visible,.chip input:focus-visible+span,textarea:focus-visible{outline:3px solid var(--amber); outline-offset:2px}
+
+  /* preview sheet */
+  #sheet{display:none; margin-top:16px; background:#fff; color:var(--ink); border-radius:14px; padding:14px}
+  #sheet.show{display:block}
+  #sheet img{width:100%; max-height:340px; object-fit:cover; border-radius:10px; display:block}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0}
+  .chip input{position:absolute; opacity:0}
+  .chip span{display:inline-block; padding:8px 14px; border-radius:99px; border:1px solid var(--line); font-size:15px; cursor:pointer}
+  .chip input:checked+span{background:var(--ink); color:#fff; border-color:var(--ink)}
+  textarea{width:100%; font:inherit; font-size:16px; padding:10px; border-radius:10px; border:1px solid var(--line); resize:vertical; min-height:60px}
+  .row{display:flex; gap:10px; margin-top:12px}
+  .row .btn{font-size:16px}
+  .btn.plain{background:#E6EBF1; color:var(--ink)}
+
+  .meal{background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; margin-bottom:14px}
+  .meal img{width:100%; height:220px; object-fit:cover; display:block; background:#E6EBF1}
+  .meal .body{padding:12px 14px}
+  .meal .top{display:flex; justify-content:space-between; gap:8px; font-size:15px}
+  .meal .top b{text-transform:capitalize}
+  .meal .top span{color:var(--muted)}
+  .meal .note{margin:6px 0 0; font-size:15px}
+  .coach{margin-top:10px; padding:10px 12px; border-left:4px solid var(--amber); background:#FFF8E8; border-radius:6px; font-size:15px}
+  .coach small{display:block; color:var(--muted); margin-bottom:2px}
+  .del{background:none; border:0; color:var(--muted); font:inherit; font-size:14px; padding:8px 0 0; cursor:pointer; text-decoration:underline}
+
+  .msg{padding:28px 20px; text-align:center; color:var(--muted)}
+  #fatal{display:none; max-width:420px; margin:80px auto; padding:0 24px; text-align:center}
+  #fatal h1{font-size:22px}
+  #toast{position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 20px); transform:translate(-50%,30px); opacity:0;
+    background:var(--ink); color:#fff; padding:12px 18px; border-radius:12px; font-size:15px; transition:.25s; pointer-events:none; max-width:90%}
+  #toast.show{transform:translate(-50%,0); opacity:1}
+  @media (prefers-reduced-motion:reduce){.bar i,#toast{transition:none}}
+</style>
+</head>
+<body>
+
+<div id="fatal">
+  <h1>This link isn't working</h1>
+  <p>It may have been replaced by a newer one. Ask the front desk to send you a fresh link.</p>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <p>Welcome back</p>
+    <h1 id="name">&nbsp;</h1>
+  </header>
+
+  <main>
+    <section class="sub" aria-label="Your membership">
+      <div class="plan"><strong id="plan">Membership</strong><span class="pill" id="status"></span></div>
+      <div class="days"><b id="daysNum">–</b><span id="daysLbl">days left</span></div>
+      <div class="bar" id="bar"><i></i></div>
+      <div class="dates"><span id="start"></span><span id="end"></span></div>
+      <div class="due" id="due" hidden></div>
+    </section>
+
+    <h2>Today's meals</h2>
+    <section class="add">
+      <p>Take a photo before you eat. Your trainer will review it and leave tips here.</p>
+      <button class="btn" id="camBtn" type="button">Take a meal photo</button>
+      <button class="btn ghost" id="galBtn" type="button">Choose from gallery</button>
+      <input id="camIn" type="file" accept="image/*" capture="environment" hidden>
+      <input id="galIn" type="file" accept="image/*" hidden>
+
+      <div id="sheet">
+        <img id="preview" alt="Meal preview">
+        <div class="chips" role="radiogroup" aria-label="Meal type">
+          <label class="chip"><input type="radio" name="mt" value="breakfast"><span>Breakfast</span></label>
+          <label class="chip"><input type="radio" name="mt" value="lunch"><span>Lunch</span></label>
+          <label class="chip"><input type="radio" name="mt" value="dinner"><span>Dinner</span></label>
+          <label class="chip"><input type="radio" name="mt" value="snack"><span>Snack</span></label>
+        </div>
+        <textarea id="note" maxlength="300" placeholder="Add a note for your trainer (optional)"></textarea>
+        <div class="row">
+          <button class="btn plain" id="cancel" type="button">Cancel</button>
+          <button class="btn" id="save" type="button">Save meal</button>
+        </div>
+      </div>
+    </section>
+
+    <h2>Your meal log</h2>
+    <div id="meals"><div class="msg">Loading…</div></div>
+  </main>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  const token = location.pathname.split('/').filter(Boolean).pop() || '';
+  const $ = (id) => document.getElementById(id);
+  const api = (p, o = {}) =>
+    fetch('/api/portal' + p, { ...o, headers: { ...(o.headers || {}), 'x-member-token': token } });
+
+  function toast(t) {
+    const el = $('toast'); el.textContent = t; el.classList.add('show');
+    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  const fmtTime = (d) => new Date(d).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+
+  // ---------- subscription ----------
+  async function loadMe() {
+    const r = await api('/me');
+    if (r.status === 401) { $('fatal').style.display = 'block'; return false; }
+    if (!r.ok) throw new Error('me failed');
+    const m = await r.json();
+    $('app').hidden = false;
+    $('name').textContent = m.name || 'Member';
+    $('plan').textContent = m.plan || 'Membership';
+    $('start').textContent = m.start ? 'Started ' + fmtDate(m.start) : '';
+    $('end').textContent = m.end ? 'Ends ' + fmtDate(m.end) : '';
+
+    if (m.end) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const end = new Date(m.end); end.setHours(0, 0, 0, 0);
+      const left = Math.round((end - today) / 86400000);
+      const total = m.start ? Math.max(1, Math.round((end - new Date(m.start)) / 86400000)) : Math.max(left, 30);
+      const pct = Math.max(0, Math.min(100, (left / total) * 100));
+      const cls = left < 0 ? 'bad' : left <= 7 ? 'warn' : '';
+      $('daysNum').textContent = left < 0 ? Math.abs(left) : left;
+      $('daysLbl').textContent = left < 0 ? 'days ago, expired' : left === 1 ? 'day left' : 'days left';
+      $('status').textContent = left < 0 ? 'Expired' : left <= 7 ? 'Renew soon' : 'Active';
+      $('status').className = 'pill ' + cls;
+      $('bar').className = 'bar ' + cls;
+      requestAnimationFrame(() => { $('bar').firstElementChild.style.width = pct + '%'; });
+    } else {
+      $('daysNum').textContent = '–'; $('daysLbl').textContent = 'No end date set';
+      $('status').textContent = 'Active';
+    }
+    const due = Number(m.due);
+    if (due > 0) { $('due').hidden = false; $('due').textContent = 'Pending dues: ₹' + due.toLocaleString('en-IN'); }
+    return true;
+  }
+
+  // ---------- meal log ----------
+  async function loadMeals() {
+    const r = await api('/me/meals');
+    if (!r.ok) { $('meals').innerHTML = '<div class="msg">Could not load your meals.</div>'; return; }
+    const list = await r.json();
+    const box = $('meals'); box.textContent = '';
+    if (!list.length) { box.innerHTML = '<div class="msg">No meals yet. Tap "Take a meal photo" to add your first one.</div>'; return; }
+
+    for (const m of list) {
+      const card = document.createElement('article'); card.className = 'meal';
+      const img = document.createElement('img'); img.alt = m.meal_type + ' photo'; img.loading = 'lazy';
+      const body = document.createElement('div'); body.className = 'body';
+      const top = document.createElement('div'); top.className = 'top';
+      const b = document.createElement('b'); b.textContent = m.meal_type;
+      const s = document.createElement('span'); s.textContent = fmtTime(m.created_at);
+      top.append(b, s); body.append(top);
+      if (m.note) { const p = document.createElement('p'); p.className = 'note'; p.textContent = m.note; body.append(p); }
+      if (m.trainer_comment) {
+        const c = document.createElement('div'); c.className = 'coach';
+        const sm = document.createElement('small'); sm.textContent = 'From your trainer';
+        c.append(sm, document.createTextNode(m.trainer_comment)); body.append(c);
+      }
+      const del = document.createElement('button'); del.className = 'del'; del.textContent = 'Delete photo';
+      del.onclick = async () => {
+        if (!confirm('Delete this meal photo?')) return;
+        const r = await api('/me/meals/' + m.id, { method: 'DELETE' });
+        if (r.ok) { card.remove(); toast('Photo deleted'); } else toast('Could not delete. Try again.');
+      };
+      body.append(del);
+      card.append(img, body); box.append(card);
+
+      api('/me/meals/' + m.id + '/image').then(async (ir) => {
+        if (ir.ok) img.src = URL.createObjectURL(await ir.blob());
+      });
+    }
+  }
+
+  // ---------- photo capture + compression ----------
+  let pendingBlob = null, previewUrl = null;
+
+  function loadImage(file) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file); const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); res(img); };
+      img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('bad image')); };
+      img.src = url;
+    });
+  }
+  async function compress(file) {
+    const img = await loadImage(file);
+    const scale = Math.min(1, 1080 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * scale); c.height = Math.round(img.naturalHeight * scale);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return new Promise((res, rej) => c.toBlob((b) => b ? res(b) : rej(new Error('compress failed')), 'image/jpeg', 0.72));
+  }
+  function guessMealType() {
+    const h = new Date().getHours();
+    return h < 11 ? 'breakfast' : h < 16 ? 'lunch' : h < 19 ? 'snack' : 'dinner';
+  }
+  function closeSheet() {
+    $('sheet').classList.remove('show'); pendingBlob = null;
+    if (previewUrl) URL.revokeObjectURL(previewUrl); previewUrl = null;
+    $('note').value = ''; $('camIn').value = ''; $('galIn').value = '';
+  }
+  async function onPick(e) {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      pendingBlob = await compress(f);
+      previewUrl = URL.createObjectURL(pendingBlob);
+      $('preview').src = previewUrl;
+      document.querySelector('input[name=mt][value=' + guessMealType() + ']').checked = true;
+      $('sheet').classList.add('show');
+      $('sheet').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch { toast('Could not read that photo. Try another one.'); }
+  }
+
+  $('camBtn').onclick = () => $('camIn').click();
+  $('galBtn').onclick = () => $('galIn').click();
+  $('camIn').onchange = onPick; $('galIn').onchange = onPick;
+  $('cancel').onclick = closeSheet;
+  $('save').onclick = async () => {
+    if (!pendingBlob) return;
+    const btn = $('save'); btn.disabled = true; btn.textContent = 'Saving…';
+    const fd = new FormData();
+    fd.append('meal_type', document.querySelector('input[name=mt]:checked')?.value || 'meal');
+    fd.append('note', $('note').value);
+    fd.append('photo', pendingBlob, 'meal.jpg');
+    try {
+      const r = await api('/me/meals', { method: 'POST', body: fd });
+      if (r.ok) { toast('Meal saved'); closeSheet(); loadMeals(); }
+      else { const j = await r.json().catch(() => ({})); toast(j.error || 'Could not save. Try again.'); }
+    } catch { toast('No connection. Try again.'); }
+    btn.disabled = false; btn.textContent = 'Save meal';
+  };
+
+  // ---------- start ----------
+  (async () => {
+    try { if (await loadMe()) loadMeals(); }
+    catch { $('fatal').style.display = 'block'; $('fatal').querySelector('h1').textContent = 'Could not load'; }
+  })();
+})();
+</script>
+</body>
+</html>

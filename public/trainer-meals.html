@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17243B">
+<title>Trainer: meals and links</title>
+<style>
+  :root{--ink:#17243B;--paper:#F3F5F8;--line:#D9DFE7;--amber:#F5A524;--muted:#5C6B82;--mint:#1F9D74;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif}
+  *{box-sizing:border-box} body{margin:0;font-family:var(--font);background:var(--paper);color:var(--ink);line-height:1.4}
+  header{background:var(--ink);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 0}
+  header h1{margin:0 0 12px;font-size:22px}
+  .tabs{display:flex;gap:4px}
+  .tabs button{flex:1;border:0;background:transparent;color:#B8C4D8;font:inherit;font-weight:600;padding:12px;border-bottom:3px solid transparent;cursor:pointer}
+  .tabs button[aria-selected=true]{color:#fff;border-color:var(--amber)}
+  main{max-width:640px;margin:0 auto;padding:16px}
+  select,input,textarea,button{font:inherit}
+  select,input[type=search]{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:#fff;margin-bottom:14px;font-size:16px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px}
+  .card img{width:100%;max-height:360px;object-fit:cover;display:block;background:#E6EBF1}
+  .card .b{padding:12px 14px}
+  .card .t{display:flex;justify-content:space-between;gap:8px}
+  .card .t span{color:var(--muted);font-size:14px}
+  .card .n{margin:6px 0;font-size:15px}
+  .cm{display:flex;gap:8px;margin-top:8px}
+  .cm input{flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:16px}
+  .btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700;background:var(--amber);color:var(--ink);cursor:pointer}
+  .btn.sec{background:#E6EBF1}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+  .row small{color:var(--muted)}
+  .out{background:#fff;border:1px solid var(--mint);border-radius:12px;padding:14px;margin-bottom:14px;word-break:break-all}
+  .out .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .msg{text-align:center;color:var(--muted);padding:30px 10px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <h1>Trainer desk</h1>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tMeals" aria-selected="true">Meal photos</button>
+    <button role="tab" id="tLinks" aria-selected="false">Member links</button>
+  </div>
+</header>
+
+<main>
+  <section id="meals">
+    <select id="who" aria-label="Filter by member"><option value="">All members</option></select>
+    <div id="feed"><div class="msg">Loading…</div></div>
+  </section>
+
+  <section id="links" hidden>
+    <input type="search" id="q" placeholder="Search member name or phone">
+    <div id="out"></div>
+    <div id="mlist"></div>
+  </section>
+</main>
+
+<script>
+// EDIT THIS to match how your staff app signs in.
+// If your staff session uses cookies, you don't need to change anything.
+// If it uses a token saved in localStorage, set the right key name below.
+function authHeaders() {
+  const t = localStorage.getItem('token') || localStorage.getItem('gymdesk_token') || localStorage.getItem('authToken');
+  return t ? { Authorization: 'Bearer ' + t } : {};
+}
+const call = (p, o = {}) => fetch('/api/portal' + p, { credentials: 'same-origin', ...o, headers: { ...authHeaders(), ...(o.headers || {}) } });
+const $ = (id) => document.getElementById(id);
+const fmt = (d) => new Date(d).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+
+function show(tab) {
+  $('meals').hidden = tab !== 'meals'; $('links').hidden = tab !== 'links';
+  $('tMeals').setAttribute('aria-selected', tab === 'meals'); $('tLinks').setAttribute('aria-selected', tab === 'links');
+  if (tab === 'links' && !$('mlist').children.length) loadMembers();
+}
+$('tMeals').onclick = () => show('meals'); $('tLinks').onclick = () => show('links');
+
+// ---------- meals ----------
+let seenMembers = new Map();
+async function loadFeed() {
+  const id = $('who').value;
+  const r = await call('/meals' + (id ? '?member_id=' + encodeURIComponent(id) : ''));
+  const feed = $('feed');
+  if (r.status === 401 || r.status === 403) { feed.innerHTML = '<div class="msg">Please sign in to the staff app first, then reload this page.</div>'; return; }
+  if (!r.ok) { feed.innerHTML = '<div class="msg">Could not load meals.</div>'; return; }
+  const list = await r.json(); feed.textContent = '';
+  if (!list.length) { feed.innerHTML = '<div class="msg">No meal photos yet.</div>'; return; }
+
+  if (!id) { // fill the filter once from the feed
+    list.forEach((m) => seenMembers.set(m.member_id, m.member_name || 'Member ' + m.member_id));
+    const cur = $('who').value; $('who').length = 1;
+    seenMembers.forEach((n, i) => $('who').add(new Option(n, i))); $('who').value = cur;
+  }
+  for (const m of list) {
+    const c = document.createElement('article'); c.className = 'card';
+    const img = document.createElement('img'); img.alt = 'Meal photo'; img.loading = 'lazy';
+    const b = document.createElement('div'); b.className = 'b';
+    const t = document.createElement('div'); t.className = 't';
+    const nm = document.createElement('b'); nm.textContent = (m.member_name || 'Member') + ' · ' + m.meal_type;
+    const tm = document.createElement('span'); tm.textContent = fmt(m.created_at);
+    t.append(nm, tm); b.append(t);
+    if (m.note) { const p = document.createElement('p'); p.className = 'n'; p.textContent = m.note; b.append(p); }
+    const cm = document.createElement('div'); cm.className = 'cm';
+    const inp = document.createElement('input'); inp.placeholder = 'Comment for the member'; inp.value = m.trainer_comment || ''; inp.maxLength = 500;
+    const sv = document.createElement('button'); sv.className = 'btn'; sv.textContent = 'Save';
+    sv.onclick = async () => {
+      sv.disabled = true;
+      const r = await call('/meals/' + m.id + '/comment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment: inp.value }) });
+      sv.textContent = r.ok ? 'Saved' : 'Failed'; sv.disabled = false; setTimeout(() => (sv.textContent = 'Save'), 1500);
+    };
+    cm.append(inp, sv); b.append(cm); c.append(img, b); feed.append(c);
+    call('/meals/' + m.id + '/image').then(async (ir) => { if (ir.ok) img.src = URL.createObjectURL(await ir.blob()); });
+  }
+}
+$('who').onchange = loadFeed;
+
+// ---------- member links ----------
+let members = [];
+async function loadMembers() {
+  const r = await call('/members');
+  if (!r.ok) { $('mlist').innerHTML = '<div class="msg">Could not load members. Make sure you are signed in.</div>'; return; }
+  members = await r.json(); renderMembers();
+}
+function renderMembers() {
+  const q = $('q').value.trim().toLowerCase();
+  const box = $('mlist'); box.textContent = '';
+  members.filter((m) => !q || (m.name || '').toLowerCase().includes(q) || String(m.phone || '').includes(q)).slice(0, 100).forEach((m) => {
+    const row = document.createElement('div'); row.className = 'row';
+    const l = document.createElement('div');
+    const n = document.createElement('div'); n.textContent = m.name || 'Member ' + m.id;
+    const s = document.createElement('small'); s.textContent = (m.phone || 'No phone') + (m.has_link ? ' · link active' : '');
+    l.append(n, s);
+    const b = document.createElement('button'); b.className = 'btn sec'; b.textContent = m.has_link ? 'Reset link' : 'Create link';
+    b.onclick = async () => {
+      if (m.has_link && !confirm('This will stop the old link from working. Continue?')) return;
+      const r = await call('/members/' + m.id + '/link', { method: 'POST' });
+      if (!r.ok) return alert('Could not create the link.');
+      const j = await r.json(); m.has_link = true; renderMembers(); showLink(m, j);
+    };
+    row.append(l, b); box.append(row);
+  });
+}
+function showLink(m, j) {
+  const o = $('out'); o.textContent = '';
+  const d = document.createElement('div'); d.className = 'out';
+  const t = document.createElement('div'); t.textContent = 'Link for ' + (m.name || 'member') + ':';
+  const a = document.createElement('div'); a.textContent = j.link; a.style.marginTop = '6px'; a.style.fontWeight = '600';
+  const acts = document.createElement('div'); acts.className = 'acts';
+  const cp = document.createElement('button'); cp.className = 'btn sec'; cp.textContent = 'Copy link';
+  cp.onclick = async () => { try { await navigator.clipboard.writeText(j.link); cp.textContent = 'Copied'; } catch { cp.textContent = 'Press and hold the link to copy'; } };
+  acts.append(cp);
+  if (j.whatsapp) { const w = document.createElement('a'); w.href = j.whatsapp; w.target = '_blank'; w.rel = 'noopener'; w.className = 'btn'; w.style.textDecoration = 'none'; w.textContent = 'Send on WhatsApp'; acts.append(w); }
+  d.append(t, a, acts); o.append(d); o.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+$('q').oninput = renderMembers;
+
+loadFeed();
+</script>
+</body>
+</html>
