@@ -7,7 +7,18 @@ types.setTypeParser(20, (v) => parseInt(v, 10));  // INT8  -> number
 
 function makePool() {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
-  return new Pool({ connectionString: process.env.DATABASE_URL, max: 10 });
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 10,
+    idleTimeoutMillis: 10000,        // close idle connections before Neon closes them for us
+    connectionTimeoutMillis: 20000,  // give a sleeping Neon database time to wake up
+    keepAlive: true
+  });
+  // Neon drops idle connections and restarts its compute from time to time. node-postgres reports
+  // that as an 'error' event on the pool. With no listener Node treats it as fatal and the whole
+  // server crashes, which is what was happening. The pool discards the dead connection by itself.
+  pool.on('error', (err) => console.error('Idle database connection dropped (safe to ignore):', err.message));
+  return pool;
 }
 
 async function migrate(pool) {
