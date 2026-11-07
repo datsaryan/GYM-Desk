@@ -1,0 +1,23 @@
+# Standby copy of Gym Desk on Netlify (same repo, same database as the Render site).
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  external_node_modules = ["pg-native"]
+
+# Android app verification file: serve the static copy.
+[[redirects]]
+  from = "/.well-known/assetlinks.json"
+  to = "/assetlinks.json"
+  status = 200
+  force = true
+
+# Anything that is not a real file in /public goes to the Express app.
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/api"
+  status = 200
