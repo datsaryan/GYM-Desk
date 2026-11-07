@@ -4,7 +4,9 @@
   "description": "Membership, renewals and check-in desk for a gym owner",
   "private": true,
   "main": "server/index.js",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --env-file=.env --watch server/index.js",
@@ -16,6 +18,7 @@
     "express-rate-limit": "^7.4.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "pg": "^8.12.0"
+    "pg": "^8.12.0",
+    "serverless-http": "^4.0.0"
   }
 }

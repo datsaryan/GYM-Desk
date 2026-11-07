@@ -9,7 +9,7 @@ function makePool() {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 10,
+    max: Number(process.env.PG_POOL_MAX) || 10,   // keep this small (3) on serverless hosts
     idleTimeoutMillis: 10000,        // close idle connections before Neon closes them for us
     connectionTimeoutMillis: 20000,  // give a sleeping Neon database time to wake up
     keepAlive: true
