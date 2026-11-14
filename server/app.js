@@ -110,6 +110,7 @@ function createApp({ pool, jwtSecret, setupKey, authLimit = 30 }) {
   });
 
   /* ---------- public ---------- */
+  app.get('/ping', (req, res) => res.json({ ok: true }));
   app.get('/healthz', wrap(async (req, res) => { await pool.query('select 1'); res.json({ ok: true }); }));
 
   app.get('/api/auth/status', wrap(async (req, res) => {
